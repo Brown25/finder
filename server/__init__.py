@@ -5,7 +5,7 @@ from flask_bcrypt import Bcrypt
 from config import SQLALCHEMY_DATABASE_URI, SQLALCHEMY_TRACK_MODIFICATIONS, SECRET_KEY
 
 db = SQLAlchemy()
-bcrypt = Bcrypt()
+bcrypt = Bcrypt()  # Initialize bcrypt here
 login_manager = LoginManager()
 
 def create_app():
@@ -15,7 +15,7 @@ def create_app():
     app.config['SECRET_KEY'] = SECRET_KEY
 
     db.init_app(app)
-    bcrypt.init_app(app)
+    bcrypt.init_app(app)  # Initialize bcrypt with app
     login_manager.init_app(app)
     login_manager.login_view = 'login'
 
