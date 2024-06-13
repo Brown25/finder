@@ -1,8 +1,8 @@
-from __init__ import create_app, db, login_manager, bcrypt  # Ensure bcrypt is imported from __init__.py
+from __init__ import create_app, db, login_manager, bcrypt  
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from models import User, Package
-from forms import LoginForm, RegisterForm  # Assuming you have these forms defined in forms.py
+from forms import LoginForm, RegisterForm 
 from datetime import datetime
 
 app = create_app()
