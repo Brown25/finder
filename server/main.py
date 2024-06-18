@@ -15,12 +15,12 @@ def load_user(user_id):
 @login_required
 def index():
     error = None
-    package_info = None
+    #package_info = None
     if request.method == "POST":
         tracking_number = request.form.get("tracking_number")
         package = Package.query.filter_by(tracking_number=tracking_number).first()
         if package: 
-            package_info = package.get_info()
+            #package_info = package.get_info()
         else:
             error = "Invalid tracking number."
     
