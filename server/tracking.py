@@ -61,3 +61,5 @@ class PackageInfo:
             'SupportPhoneNumbers': self.support_phone_numbers,
             'TransitEvents': self.transit_events
         }
+    
+    
