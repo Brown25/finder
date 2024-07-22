@@ -1,92 +1,78 @@
 import unittest
 import sys
 import os
-from flask_testing import TestCase
-from server.models import User, Package
-from server.forms import LoginForm, RegisterForm
-from models import db, User, Package  
 
-class TestMain(TestCase):
+# Add the path to the 'server' directory
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'server')))
+
+from flask_testing import TestCase
+
+from server.__init__ import create_app
+from server.models import User, Package
+from server.forms import LoginForm, RegisterForm, CreateLabelForm
+
+class TestMainRoutes(TestCase):
 
     def create_app(self):
         app = create_app()
         app.config['TESTING'] = True
-        app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'  # In-memory database for tests
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
         return app
 
     def setUp(self):
+        self.app = self.create_app()
+        self.client = self.app.test_client()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
         db.create_all()
+
+        hashed_password = bcrypt.generate_password_hash('testpassword').decode('utf-8')
+        user = User(username='testuser', password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+        self.app_context.pop()
 
-    # Test Examples
+    def test_index_route(self):
+        with self.client:
+            self.client.post('/login', data=dict(username='testuser', password='testpassword'))
+            response = self.client.get('/')
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Package Tracking System', response.data)
 
-    def test_index_route_requires_login(self):
-        response = self.client.get('/')
-        self.assertRedirects(response, '/login')  # Should redirect to login page
+    def test_login_route(self):
+        response = self.client.post('/login', data=dict(username='testuser', password='testpassword'), follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Package Tracking System', response.data)
 
-    def test_index_route_with_login(self):
-        # Create a test user and log them in
-        user = User(username='testuser', password='password')
-        db.session.add(user)
-        db.session.commit()
+        response = self.client.post('/login', data=dict(username='wronguser', password='wrongpassword'), follow_redirects=True)
+        self.assertIn(b'Incorrect username or password', response.data)
 
-        with self.client.session_transaction() as session:
-            session['user_id'] = user.id
+    def test_logout_route(self):
+        with self.client:
+            self.client.post('/login', data=dict(username='testuser', password='testpassword'))
+            response = self.client.get('/logout', follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Package Tracking System', response.data)
 
-        response = self.client.get('/')
-        self.assert200(response) 
+    def test_register_route(self):
+        with self.client:
+            response = self.client.post('/register', data=dict(username='newuser', password='newpassword', confirm_password='newpassword'), follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Account created successfully!', response.data)
 
-'''
+            response = self.client.post('/register', data=dict(username='testuser', password='testpassword', confirm_password='testpassword'), follow_redirects=True)
+            self.assertIn(b'Username already exists', response.data)
 
-    # Add more tests for login, registration, tracking functionality, etc.
-import pytest
-from server import create_app, db
-from server.models import User
+    def test_create_label_route(self):
+        with self.client:
+            self.client.post('/login', data=dict(username='testuser', password='testpassword'))
+            response = self.client.post('/create_label', data=dict(sender='Sender', recipient='Recipient', address='123 Test St'), follow_redirects=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Label created successfully!', response.data)
 
-@pytest.fixture(scope='module')
-def test_client():
-    flask_app = create_app()
-    flask_app.config['TESTING'] = True
-    flask_app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-
-    with flask_app.test_client() as testing_client:
-        with flask_app.app_context():
-            db.create_all()
-            yield testing_client
-            db.drop_all()
-
-def test_register(test_client):
-    response = test_client.post('/register', data=dict(
-        username='testuser',
-        password='testpassword'
-    ), follow_redirects=True)
-    assert response.status_code == 200
-    assert b'Account created successfully!' in response.data
-
-def test_login(test_client):
-    test_client.post('/register', data=dict(
-        username='testuser',
-        password='testpassword'
-    ), follow_redirects=True)
-
-    response = test_client.post('/login', data=dict(
-        username='testuser',
-        password='testpassword'
-    ), follow_redirects=True)
-    assert response.status_code == 200
-    assert b'Welcome' in response.data
-
-def test_logout(test_client):
-    test_client.post('/login', data=dict(
-        username='testuser',
-        password='testpassword'
-    ), follow_redirects=True)
-
-    response = test_client.get('/logout', follow_redirects=True)
-    assert response.status_code == 200
-    assert b'You have been logged out' in response.data
-'''
+if __name__ == '__main__':
+    unittest.main()

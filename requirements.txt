@@ -1,8 +1,12 @@
-
 # Dev environment
 pip
 autopep8
 
 # App
-flask
+Flask
 flask_cors
+Flask-SQLAlchemy
+Flask-Login
+Flask-Bcrypt
+Flask-Testing
+Flask-WTF

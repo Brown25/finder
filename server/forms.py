@@ -15,6 +15,13 @@ class RegisterForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[InputRequired(), Length(min=8, max=150)])
     submit = SubmitField('Register')
     
+
+class CreateLabelForm(FlaskForm):
+    sender = StringField('Sender', validators=[InputRequired(), Length(min=4, max=150)])
+    recipient = StringField('Recipient', validators=[InputRequired(), Length(min=4, max=150)])
+    address = StringField('Address', validators=[InputRequired(), Length(min=4, max=255)])
+    submit = SubmitField('Create Label')
+    
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user:

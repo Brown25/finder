@@ -1,5 +1,5 @@
 # src/tracking.py
-
+from datetime import datetime
 class Package:
     def __init__(self, tracking_number, tracking_url, support_phone_numbers):
         self.delivered_date = None
@@ -47,19 +47,19 @@ class Package:
         }
 
 
-class PackageInfo:
-    def __init__(self, tracking_number, tracking_url, support_phone_numbers, transit_events):
+class Label:
+    def __init__(self, tracking_number, sender, recipient, address):
         self.tracking_number = tracking_number
-        self.tracking_url = tracking_url
-        self.support_phone_numbers = support_phone_numbers
-        self.transit_events = transit_events
+        self.sender = sender
+        self.recipient = recipient
+        self.address = address
+        self.creation_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def get_info(self):
+    def get_label_info(self):
         return {
-            'TrackingNumber': self.tracking_number,
-            'TrackingURL': self.tracking_url,
-            'SupportPhoneNumbers': self.support_phone_numbers,
-            'TransitEvents': self.transit_events
+            "tracking_number": self.tracking_number,
+            "sender": self.sender,
+            "recipient": self.recipient,
+            "address": self.address,
+            "creation_date": self.creation_date
         }
-    
-    
